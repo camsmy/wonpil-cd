@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wonpil Zoetrope</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: white;
+            font-family: sans-serif;
+        }
+
+        /* This is the "viewfinder" window */
+        .viewfinder {
+            width: 180px;  /* Adjust based on the size of one frame */
+            height: 180px; 
+            border: 4px solid #444;
+            border-radius: 15px;
+            overflow: hidden; /* Hides the rest of the CD */
+            position: relative;
+            background: #000;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        /* The actual CD image */
+        #disc {
+            position: absolute;
+            width: 800px; /* Adjust size so the top frame fits the viewfinder */
+            height: 800px;
+            top: -40px;   /* Shift up/down to align the top frame */
+            left: 50%;
+            transform: translateX(-50%) rotate(0deg);
+            transition: none; /* We want instant snaps, not smooth sliding */
+        }
+
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+        }
+
+        .btn-group {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 15px;
+            cursor: pointer;
+            border: 1px solid #555;
+            border-radius: 5px;
+            background: #333;
+            color: white;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        /* Active state for direction buttons */
+        button.active {
+            background: #fff;
+            color: #1a1a1a;
+            border-color: #fff;
+        }
+
+        input { width: 200px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="viewfinder">
+        <img src="frame1.png" id="disc" alt="Zoetrope Disc">
+    </div>
+
+    <div class="controls">
+        <p>Speed (FPS): <span id="fps-label">30</span></p>
+        <input type="range" id="speed" min="1" max="60" value="30">
+        
+        <div class="btn-group">
+            <button id="reverse">Reverse</button>
+            <button id="toggle">Pause</button>
+            <button id="forward" class="active">Forward</button>
+        </div>
+    </div>
+
+    <script>
+        const disc = document.getElementById('disc');
+        const speedInput = document.getElementById('speed');
+        const fpsLabel = document.getElementById('fps-label');
+        const toggleBtn = document.getElementById('toggle');
+        const forwardBtn = document.getElementById('forward');
+        const reverseBtn = document.getElementById('reverse');
+
+        let rotation = 0;
+        let fps = 30;
+        let isRunning = true;
+        let lastTime = 0;
+        let direction = 1; // 1 for forward, -1 for reverse
+
+        // The image has 12 frames, so 360 / 12 = 30 degrees per step
+        const step = 30; 
+
+        function animate(time) {
+            if (!isRunning) return;
+
+            const delta = time - lastTime;
+            const interval = 1000 / fps;
+
+            if (delta >= interval) {
+                // Apply direction to the rotation step
+                rotation -= (step * direction); 
+                disc.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+                lastTime = time;
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        speedInput.addEventListener('input', (e) => {
+            fps = e.target.value;
+            fpsLabel.textContent = fps;
+        });
+
+        toggleBtn.addEventListener('click', () => {
+            isRunning = !isRunning;
+            toggleBtn.textContent = isRunning ? "Pause" : "Play";
+            if (isRunning) requestAnimationFrame(animate);
+        });
+
+        // Direction listeners
+        forwardBtn.addEventListener('click', () => {
+            direction = 1;
+            forwardBtn.classList.add('active');
+            reverseBtn.classList.remove('active');
+        });
+
+        reverseBtn.addEventListener('click', () => {
+            direction = -1;
+            reverseBtn.classList.add('active');
+            forwardBtn.classList.remove('active');
+        });
+
+        // Start the loop
+        requestAnimationFrame(animate);
+    </script>
+</body>
+</html>
