@@ -3,94 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wonpil Zoetrope</title>
+    <title>Wonpil Unpiltered CD</title>
     <style>
+        :root {
+            --paper: #dcd0c0;
+            --accent: #b85c38;
+        }
+
         body {
-            background-color: #1a1a1a;
+            background: radial-gradient(circle, #2c2c2c 0%, #111 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
-            color: white;
-            font-family: sans-serif;
+            color: var(--paper);
+            font-family: 'Georgia', serif;
+            overflow: hidden;
         }
 
-        /* This is the "viewfinder" window */
+        @keyframes flicker {
+            0% { opacity: 0.98; }
+            50% { opacity: 1; }
+            100% { opacity: 0.97; }
+        }
+
+        h1 {
+            font-variant: small-caps;
+            letter-spacing: 2px;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
         .viewfinder {
-            width: 180px;  /* Adjust based on the size of one frame */
-            height: 180px; 
-            border: 4px solid #444;
-            border-radius: 15px;
-            overflow: hidden; /* Hides the rest of the CD */
+            width: 260px; 
+            height: 260px; 
+            border: 12px solid #222;
+            border-radius: 50%;
+            overflow: hidden; 
             position: relative;
             background: #000;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
+            display: flex;
+            justify-content: center;
+            animation: flicker 0.15s infinite;
         }
 
-        /* The actual CD image */
         #disc {
             position: absolute;
-            width: 800px; /* Adjust size so the top frame fits the viewfinder */
-            height: 800px;
-            top: -40px;   /* Shift up/down to align the top frame */
+            width: 1050px; 
+            height: 1050px;
             left: 50%;
-            transform: translateX(-50%) rotate(0deg);
-            transition: none; /* We want instant snaps, not smooth sliding */
+            /* Centers rotation and aligns the 14-frame window */
+            margin-left: -540px;
+            top: -40px;
+            transform: rotate(-12.857deg);
+            transform-origin: center center;
+            transition: none;
+        }
+
+        .vintage-filter {
+            filter: sepia(0.6) contrast(1.2) brightness(0.8) grayscale(0.2);
         }
 
         .controls {
             margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(180deg, #333 0%, #1a1a1a 100%);
+            border: 1px solid #444;
+            border-radius: 8px;
             text-align: center;
+            width: 320px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
         }
 
-        .btn-group {
-            margin-top: 15px;
-            display: flex;
-            gap: 10px;
-            justify-content: center;
+        .btn-group { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            gap: 8px; 
+            margin-top: 15px; 
         }
 
         button {
-            padding: 10px 15px;
+            padding: 10px;
             cursor: pointer;
-            border: 1px solid #555;
-            border-radius: 5px;
-            background: #333;
-            color: white;
-            font-weight: bold;
-            transition: background 0.2s;
-        }
-
-        button:hover {
+            border: 1px solid #111;
             background: #444;
+            color: #ccc;
+            font-family: inherit;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            transition: 0.1s;
         }
 
-        /* Active state for direction buttons */
-        button.active {
-            background: #fff;
-            color: #1a1a1a;
-            border-color: #fff;
+        button:active { transform: translateY(1px); }
+        button.active { background: var(--accent); color: white; border-color: #803c21; }
+
+        .extra-tools {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
         }
 
-        input { width: 200px; cursor: pointer; }
+        #filter-toggle { background: #444; width: 100%; }
+
+        input[type=range] { 
+            width: 100%; 
+            margin-top: 10px; 
+            accent-color: var(--accent); 
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
+    <h1>Wonpil Unpiltered CD</h1>
+
     <div class="viewfinder">
-        <img src="frame1.png" id="disc" alt="Zoetrope Disc">
+        <img src="frame1.png" id="disc" class="vintage-filter" alt="Zoetrope Disc">
     </div>
 
     <div class="controls">
-        <p>Speed (FPS): <span id="fps-label">30</span></p>
-        <input type="range" id="speed" min="1" max="60" value="30">
+        <div style="font-size: 0.8rem; margin-bottom: 5px;">SPEED: <span id="fps-label">30</span> RPM</div>
+        <input type="range" id="speed" min="3" max="60" value="30" step="1">
         
         <div class="btn-group">
-            <button id="reverse">Reverse</button>
-            <button id="toggle">Pause</button>
-            <button id="forward" class="active">Forward</button>
+            <button id="reverse">REV</button>
+            <button id="toggle">STOP</button>
+            <button id="forward" class="active">FWD</button>
+        </div>
+
+        <div class="extra-tools">
+            <button id="filter-toggle">Filter: ON</button>
         </div>
     </div>
 
@@ -99,46 +145,49 @@
         const speedInput = document.getElementById('speed');
         const fpsLabel = document.getElementById('fps-label');
         const toggleBtn = document.getElementById('toggle');
+        const filterBtn = document.getElementById('filter-toggle');
         const forwardBtn = document.getElementById('forward');
         const reverseBtn = document.getElementById('reverse');
 
-        let rotation = 0;
-        let fps = 30;
+        // Starting at the tilt defined in CSS
+        let rotation = -12.857; 
         let isRunning = true;
+        let direction = 1;
         let lastTime = 0;
-        let direction = 1; // 1 for forward, -1 for reverse
+        let isVintage = true;
 
-        // The image has 12 frames, so 360 / 12 = 30 degrees per step
-        const step = 30; 
+        const step = 360 / 14; 
 
         function animate(time) {
             if (!isRunning) return;
-
+            
+            const rpm = speedInput.value;
+            // Interval: 60,000ms / (RPM * 14 frames)
+            const interval = 60000 / (rpm * 14); 
             const delta = time - lastTime;
-            const interval = 1000 / fps;
 
             if (delta >= interval) {
-                // Apply direction to the rotation step
                 rotation -= (step * direction); 
-                disc.style.transform = `translateX(-50%) rotate(${rotation}deg)`;
+                disc.style.transform = `rotate(${rotation}deg)`;
                 lastTime = time;
             }
-
             requestAnimationFrame(animate);
         }
 
-        speedInput.addEventListener('input', (e) => {
-            fps = e.target.value;
-            fpsLabel.textContent = fps;
+        speedInput.addEventListener('input', () => fpsLabel.textContent = speedInput.value);
+        
+        filterBtn.addEventListener('click', () => {
+            isVintage = !isVintage;
+            disc.classList.toggle('vintage-filter');
+            filterBtn.textContent = isVintage ? "Filter: ON" : "Filter: OFF";
         });
 
         toggleBtn.addEventListener('click', () => {
             isRunning = !isRunning;
-            toggleBtn.textContent = isRunning ? "Pause" : "Play";
+            toggleBtn.textContent = isRunning ? "STOP" : "START";
             if (isRunning) requestAnimationFrame(animate);
         });
 
-        // Direction listeners
         forwardBtn.addEventListener('click', () => {
             direction = 1;
             forwardBtn.classList.add('active');
@@ -151,7 +200,6 @@
             forwardBtn.classList.remove('active');
         });
 
-        // Start the loop
         requestAnimationFrame(animate);
     </script>
 </body>
